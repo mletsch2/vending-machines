@@ -26,6 +26,15 @@ df = load_data()
 # Streamlit Dashboard UI
 st.title("Vending Machine Manager 🥤")
 
+# ✅ Move "Machines That Need Refilling" to the top
+st.subheader("⚠️ Machines That Need Refilling")
+low_stock_machines = df[df["ready_to_fill"]]
+if not low_stock_machines.empty:
+    st.write(low_stock_machines)
+    st.warning("⚠️ Some machines are below the refill threshold!")
+else:
+    st.success("✅ All machines have sufficient stock!")
+
 # Display Machine Stock
 st.subheader("📊 Current Stock Levels")
 st.dataframe(df)
@@ -68,15 +77,6 @@ if st.button("Add Machine"):
 
 # ✅ **Recalculate refill status dynamically**
 df["ready_to_fill"] = df["total_items"] <= df["threshold"]
-
-# Display updated machine list
-st.subheader("⚠️ Machines That Need Refilling")
-low_stock_machines = df[df["ready_to_fill"]]
-if not low_stock_machines.empty:
-    st.write(low_stock_machines)
-    st.warning("⚠️ Some machines are below the refill threshold!")
-else:
-    st.success("✅ All machines have sufficient stock!")
 
 # ✅ **Enhanced Chart with Filters**
 st.subheader("📉 Stock Levels by Machine")
