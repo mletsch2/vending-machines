@@ -1,0 +1,4 @@
+location,total_items,threshold,ready_to_fill
+Location A,50,40,False
+Location B,60,50,False
+Location C,30,45,True
