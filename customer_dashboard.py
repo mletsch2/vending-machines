@@ -9,10 +9,20 @@ SHEET_ID = "1c-WgLrMW-teYTtW1OGiVqf9q-eGuUvfkSYDCuF9S2ok"
 SHEET_NAME = "Sheet1"
 
 # ✅ Google Authentication
-CREDS_FILE = "config/service_account.json"  #
+import json
+import streamlit as st
+from google.oauth2.service_account import Credentials
+import gspread
+
+# Load credentials from Streamlit secrets
+creds_info = st.secrets["google"]  # ✅ Read secrets from Streamlit
+creds = Credentials.from_service_account_info(json.loads(json.dumps(creds_info)))
+
+# Authenticate Google Sheets
+client = gspread.authorize(creds)
+sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/spreadsheets",
          "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
-creds = Credentials.from_service_account_file(CREDS_FILE, scopes=scope)
 client = gspread.authorize(creds)
 sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
 
