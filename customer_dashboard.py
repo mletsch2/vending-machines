@@ -1,50 +1,79 @@
 import streamlit as st
+import gspread
 import pandas as pd
-import gspread
+import matplotlib.pyplot as plt
 from google.oauth2.service_account import Credentials
-import matplotlib.pyplot as plt  # ✅ Matplotlib for charting
 
-# ✅ Load Google Sheets
-SHEET_ID = "1c-WgLrMW-teYTtW1OGiVqf9q-eGuUvfkSYDCuF9S2ok"
-SHEET_NAME = "Sheet1"
+# 🔹 Streamlit App Title
+st.title("📊 Vending Machine Dashboard")
 
-# ✅ Google Authentication
-import json
-import streamlit as st
-from google.oauth2.service_account import Credentials
-import gspread
+# ✅ Step 1: Load Google Credentials from Streamlit Secrets
+try:
+    creds_info = st.secrets["google"]
+    scope = ["https://www.googleapis.com/auth/spreadsheets"]
+    creds = Credentials.from_service_account_info(creds_info, scopes=scope)
+    client = gspread.authorize(creds)
+    st.write("✅ Google authentication successful!")
+except Exception as e:
+    st.error(f"🚨 Google authentication failed: {e}")
+    st.stop()
 
-# Load credentials from Streamlit secrets
-creds_info = st.secrets["google"]  # ✅ Read secrets from Streamlit
-creds = Credentials.from_service_account_info(creds_info)
+# ✅ Step 2: Connect to Google Sheets
+SHEET_ID = st.secrets["SHEET_ID"]  # 🔹 Store in Streamlit Secrets
+SHEET_NAME = "Vending Data"
 
-# Authenticate Google Sheets
-client = gspread.authorize(creds)
-sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/spreadsheets",
-         "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
-client = gspread.authorize(creds)
-sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
+try:
+    sheet = client.open_by_key(SHEET_ID)
+    worksheet = sheet.worksheet(SHEET_NAME)
+    st.write(f"✅ Connected to Google Sheet: {SHEET_NAME}")
+except Exception as e:
+    st.error(f"🚨 Error accessing Google Sheets: {e}")
+    st.stop()
 
-# ✅ Function to Load Data from Google Sheets
-def load_data():
-    data = sheet.get_all_records()
+# ✅ Step 3: Load Data from Google Sheets
+try:
+    data = worksheet.get_all_records()
     df = pd.DataFrame(data)
     df["ready_to_fill"] = df["total_items"] <= df["threshold"]
-    return df
+    st.subheader("📋 Vending Machine Stock Levels")
+    st.dataframe(df)
+except Exception as e:
+    st.error(f"🚨 Error loading data from Google Sheets: {e}")
+    st.stop()
 
-# ✅ Function to Update Google Sheets
-def update_google_sheets(dataframe):
-    sheet.clear()  # 🔹 Clears old data
-    sheet.update([dataframe.columns.values.tolist()] + dataframe.values.tolist())
+# ✅ Step 4: Refill a Machine
+st.subheader("🔄 Refill a Machine")
+machine_to_refill = st.selectbox("Select a machine", df["location"])
+new_stock = st.number_input("Enter new total stock:", min_value=0, max_value=500, step=1)
+if st.button("Update Stock"):
+    df.loc[df["location"] == machine_to_refill, "total_items"] = new_stock
+    df["ready_to_fill"] = df["total_items"] <= df["threshold"]
+    worksheet.update([df.columns.values.tolist()] + df.values.tolist())  # ✅ Update Google Sheets
+    st.success(f"✅ {machine_to_refill} updated to {new_stock} items!")
 
-# Load data
-df = load_data()
+# ✅ Step 5: Adjust Refill Threshold
+st.subheader("⚙️ Adjust Refill Threshold")
+machine_to_edit = st.selectbox("Select machine to edit threshold", df["location"])
+new_threshold = st.number_input("Enter new threshold:", min_value=0, max_value=500, step=1)
+if st.button("Update Threshold"):
+    df.loc[df["location"] == machine_to_edit, "threshold"] = new_threshold
+    df["ready_to_fill"] = df["total_items"] <= df["threshold"]
+    worksheet.update([df.columns.values.tolist()] + df.values.tolist())  # ✅ Update Google Sheets
+    st.success(f"✅ {machine_to_edit} threshold updated to {new_threshold}!")
 
-# ✅ Streamlit Dashboard UI
-st.title("Vending Machine Manager 🥤")
+# ✅ Step 6: Add New Machine
+st.subheader("➕ Add a New Machine")
+new_machine = st.text_input("Enter new machine location")
+new_total = st.number_input("Initial stock:", min_value=0, max_value=500, step=1)
+new_thresh = st.number_input("Set refill threshold:", min_value=0, max_value=500, step=1)
+if st.button("Add Machine"):
+    new_row = pd.DataFrame({"location": [new_machine], "total_items": [new_total], "threshold": [new_thresh]})
+    df = pd.concat([df, new_row], ignore_index=True)
+    df["ready_to_fill"] = df["total_items"] <= df["threshold"]
+    worksheet.update([df.columns.values.tolist()] + df.values.tolist())  # ✅ Update Google Sheets
+    st.success(f"✅ {new_machine} added with {new_total} items and a threshold of {new_thresh}!")
 
-# ✅ Show Machines That Need Refilling (At the Top)
+# ✅ Step 7: Display Machines That Need Refilling
 st.subheader("⚠️ Machines That Need Refilling")
 low_stock_machines = df[df["ready_to_fill"]]
 if not low_stock_machines.empty:
@@ -53,55 +82,15 @@ if not low_stock_machines.empty:
 else:
     st.success("✅ All machines have sufficient stock!")
 
-# ✅ Display Machine Stock
-st.subheader("📊 Current Stock Levels")
-st.dataframe(df)
-
-# ✅ Refill a Machine
-st.subheader("🔄 Refill a Machine")
-machine_to_refill = st.selectbox("Select a machine", df["location"])
-new_stock = st.number_input("Enter new total stock:", min_value=0, max_value=500, step=1)
-if st.button("Update Stock"):
-    df.loc[df["location"] == machine_to_refill, "total_items"] = new_stock
-    update_google_sheets(df)  # 🔹 Save to Google Sheets
-    st.success(f"✅ {machine_to_refill} updated to {new_stock} items!")
-
-# ✅ Change Refill Threshold
-st.subheader("⚙️ Adjust Refill Threshold")
-machine_to_edit = st.selectbox("Select machine to edit threshold", df["location"])
-new_threshold = st.number_input("Enter new threshold:", min_value=0, max_value=500, step=1)
-if st.button("Update Threshold"):
-    df.loc[df["location"] == machine_to_edit, "threshold"] = new_threshold
-    update_google_sheets(df)  # 🔹 Save to Google Sheets
-    st.success(f"✅ {machine_to_edit} threshold updated to {new_threshold}!")
-
-# ✅ Add a New Machine
-st.subheader("➕ Add a New Machine")
-new_machine = st.text_input("Enter new machine location")
-new_total = st.number_input("Initial stock:", min_value=0, max_value=500, step=1)
-new_thresh = st.number_input("Set refill threshold:", min_value=0, max_value=500, step=1)
-if st.button("Add Machine"):
-    new_row = pd.DataFrame({"location": [new_machine], "total_items": [new_total], "threshold": [new_thresh]})
-    df = pd.concat([df, new_row], ignore_index=True)
-    update_google_sheets(df)  # 🔹 Save to Google Sheets
-    st.success(f"✅ {new_machine} added with {new_total} items and a threshold of {new_thresh}!")
-
-# ✅ Enhanced Chart with Filters
-st.subheader("📉 Stock Levels by Machine")
-
-selected_locations = st.multiselect("Filter by Location", df["location"].unique(), default=df["location"].unique())
-filtered_df = df[df["location"].isin(selected_locations)]
-
+# ✅ Step 8: Plot Inventory Levels
+st.subheader("📊 Inventory Levels Chart")
 fig, ax = plt.subplots()
-ax.bar(
-    filtered_df["location"],
-    filtered_df["total_items"],
-    color=['green' if t >= th else 'red' for t, th in zip(filtered_df["total_items"], filtered_df["threshold"])]
-)
-ax.set_xlabel("Vending Machines")
-ax.set_ylabel("Total Items Remaining")
-ax.set_title("Vending Machine Stock Levels")
-
+ax.bar(df["location"], df["total_items"], color="blue", label="Total Items")
+ax.axhline(y=df["threshold"].mean(), color="red", linestyle="--", label="Average Threshold")
+ax.set_xlabel("Location")
+ax.set_ylabel("Total Items")
+ax.set_title("Inventory Levels by Location")
+ax.legend()
 st.pyplot(fig)
 
-st.caption("📌 Changes are automatically saved.")
+st.caption("📌 Changes are automatically saved to Google Sheets.")
