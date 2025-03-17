@@ -9,7 +9,7 @@ SHEET_ID = "1c-WgLrMW-teYTtW1OGiVqf9q-eGuUvfkSYDCuF9S2ok"
 SHEET_NAME = "Sheet1"
 
 # ✅ Google Authentication
-CREDS_FILE = "jovial-monument-454000-a4-2c1c0d48564b.json"  #
+CREDS_FILE = "config/jovial-monument-454000-a4-2c1c0d48564b.json"  #
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/spreadsheets",
          "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
 creds = Credentials.from_service_account_file(CREDS_FILE, scopes=scope)
