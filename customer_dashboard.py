@@ -20,6 +20,7 @@ except Exception as e:
 
 # ✅ Step 2: Connect to Google Sheets
 SHEET_ID = st.secrets["google"]["SHEET_ID"]
+SHEET_NAME = "Vending Data"  # 🔹 Update this to match your actual sheet tab name
 
 try:
     sheet = client.open_by_key(SHEET_ID)
