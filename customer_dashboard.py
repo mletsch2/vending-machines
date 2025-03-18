@@ -19,7 +19,11 @@ except Exception as e:
     st.stop()
 
 # ✅ Step 2: Connect to Google Sheets
-SHEET_ID = st.secrets["SHEET_ID"]  # 🔹 Store in Streamlit Secrets
+if "SHEET_ID" not in st.secrets:
+    st.error("🚨 SHEET_ID is missing from Streamlit Cloud secrets!")
+    st.stop()
+SHEET_ID = st.secrets["SHEET_ID"]
+st.write(f"✅ SHEET_ID found: {SHEET_ID}")
 SHEET_NAME = "Vending Data"
 
 try:
