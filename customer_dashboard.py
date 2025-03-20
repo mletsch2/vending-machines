@@ -3,15 +3,16 @@ import gspread
 import pandas as pd
 from google.oauth2.service_account import Credentials
 
-# 🎨 Custom Theme Styling
+# 🎨 Dark Mode Styling
 st.markdown(
     """
     <style>
-        body {background-color: #f5f5f5;}
-        .main {background-color: #ffffff; padding: 20px; border-radius: 10px;}
-        .stDataFrame {border-radius: 10px;}
-        div[data-testid="stMetric"] > label { font-size: 18px; font-weight: bold; }
-        .stExpander {border: 1px solid #ddd; border-radius: 10px;}
+        body {background-color: #1e1e1e; color: #ffffff;}
+        .main {background-color: #2a2a2a; padding: 20px; border-radius: 10px;}
+        .stDataFrame {border-radius: 10px; background-color: #333333; color: #ffffff;}
+        div[data-testid="stMetric"] > label { font-size: 18px; font-weight: bold; color: #dddddd; }
+        .stExpander {border: 1px solid #444444; border-radius: 10px; background-color: #252525; color: #ffffff;}
+        .warning {background-color: #ff4c4c; padding: 10px; border-radius: 8px; color: white; font-weight: bold;}
     </style>
     """,
     unsafe_allow_html=True,
@@ -26,7 +27,6 @@ try:
     scope = ["https://www.googleapis.com/auth/spreadsheets"]
     creds = Credentials.from_service_account_info(creds_info, scopes=scope)
     client = gspread.authorize(creds)
-    # st.success("✅ Google authentication successful!")  # 🔹 Commented out to clean UI
 except Exception as e:
     st.error(f"🚨 Google authentication failed: {e}")
     st.stop()
@@ -37,7 +37,6 @@ SHEET_NAME = "Vending Data"
 
 try:
     sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
-    # st.success(f"✅ Connected to Google Sheet: {SHEET_NAME}")  # 🔹 Commented out for clean UI
 except Exception as e:
     st.error(f"🚨 Error accessing Google Sheets: {e}")
     st.stop()
@@ -52,8 +51,8 @@ try:
     st.subheader("⚠️ Machines That Need Refilling")
     low_stock_machines = df[df["ready_to_fill"]]
     if not low_stock_machines.empty:
-        st.write(low_stock_machines.style.set_properties(**{"background-color": "#ffcccc"}))
-        st.warning("⚠️ Some machines need refilling!")
+        st.markdown('<div class="warning">⚠️ Some machines need refilling!</div>', unsafe_allow_html=True)
+        st.write(low_stock_machines.style.set_properties(**{"background-color": "#ff4c4c", "color": "white"}))
     else:
         st.success("✅ All machines have sufficient stock!")
 
@@ -65,7 +64,8 @@ try:
 
     # 📋 Styled Data Table - General Stock Levels
     st.subheader("📋 Vending Machine Stock Levels")
-    st.dataframe(df.style.applymap(lambda x: "background-color: #ffcccc" if x else "", subset=["ready_to_fill"]))
+    st.dataframe(df.style.applymap(lambda x: "background-color: #ff4c4c" if x else "", subset=["ready_to_fill"]))
+
 except Exception as e:
     st.error(f"🚨 Error loading data from Google Sheets: {e}")
     st.stop()
