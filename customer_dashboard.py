@@ -5,6 +5,7 @@ from google.oauth2.service_account import Credentials
 
 # Streamlit App Title
 st.markdown("<h1 style='text-align: center;'>Health-E Vend</h1>", unsafe_allow_html=True)
+st.divider()  # Optional: Adds a gray divider like before
 
 # ✅ Load Google Credentials from Streamlit Secrets
 try:
@@ -37,7 +38,6 @@ except Exception as e:
 
 # ✅ Machines That Need Refilling (Always Visible)
 st.markdown('<h3 style="text-align: center;">⚠️ Machines That Need Refilling</h3>', unsafe_allow_html=True)
-st.divider()  # Optional: Adds a gray divider like before
 low_stock_machines = df[df["ready_to_fill"]]
 if not low_stock_machines.empty:
     st.write(low_stock_machines)
