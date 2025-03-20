@@ -3,16 +3,15 @@ import gspread
 import pandas as pd
 from google.oauth2.service_account import Credentials
 
-# 🎨 Dark Mode Styling
+# 🎨 Full Dark Theme
 st.markdown(
     """
     <style>
-        body {background-color: #1e1e1e; color: #ffffff;}
-        .main {background-color: #2a2a2a; padding: 20px; border-radius: 10px;}
-        .stDataFrame {border-radius: 10px; background-color: #333333; color: #ffffff;}
+        body {background-color: #000000; color: #ffffff;}
+        .main {background-color: #111111; padding: 20px; border-radius: 10px;}
+        .stDataFrame {border-radius: 10px; background-color: #222222; color: #ffffff;}
         div[data-testid="stMetric"] > label { font-size: 18px; font-weight: bold; color: #dddddd; }
-        .stExpander {border: 1px solid #444444; border-radius: 10px; background-color: #252525; color: #ffffff;}
-        .warning {background-color: #ff4c4c; padding: 10px; border-radius: 8px; color: white; font-weight: bold;}
+        .stExpander {border: 1px solid #333333; border-radius: 10px; background-color: #111111; color: #ffffff;}
     </style>
     """,
     unsafe_allow_html=True,
@@ -51,8 +50,7 @@ try:
     st.subheader("⚠️ Machines That Need Refilling")
     low_stock_machines = df[df["ready_to_fill"]]
     if not low_stock_machines.empty:
-        st.markdown('<div class="warning">⚠️ Some machines need refilling!</div>', unsafe_allow_html=True)
-        st.write(low_stock_machines.style.set_properties(**{"background-color": "#ff4c4c", "color": "white"}))
+        st.write(low_stock_machines)
     else:
         st.success("✅ All machines have sufficient stock!")
 
@@ -64,7 +62,7 @@ try:
 
     # 📋 Styled Data Table - General Stock Levels
     st.subheader("📋 Vending Machine Stock Levels")
-    st.dataframe(df.style.applymap(lambda x: "background-color: #ff4c4c" if x else "", subset=["ready_to_fill"]))
+    st.dataframe(df)
 
 except Exception as e:
     st.error(f"🚨 Error loading data from Google Sheets: {e}")
