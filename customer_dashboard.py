@@ -6,16 +6,16 @@ from google.oauth2.service_account import Credentials
 # ✅ Set Streamlit Page Config for Centered Layout
 st.set_page_config(page_title="Vending Machine Dashboard", layout="centered")
 
-# ✅ Custom Styling for White Background & Black Text
+# ✅ Custom Styling for Transparent Background & Black Text
 st.markdown("""
     <style>
         body {
-            background-color: white;
+            background-color: transparent !important;
             color: black;
         }
         .block-container {
             padding: 3rem;
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.9); /* Slight opacity for contrast */
             border-radius: 10px;
             max-width: 800px;
             margin: auto;
