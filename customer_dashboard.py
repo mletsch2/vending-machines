@@ -30,7 +30,16 @@ except Exception as e:
     st.error(f"🚨 Error accessing Google Sheets: {e}")
     st.stop()
 
-# ✅ Step 3: Display Machines That Need Refilling
+# ✅ Step 3: Load Data from Google Sheets
+try:
+    data = worksheet.get_all_records()
+    df = pd.DataFrame(data)
+    df["ready_to_fill"] = df["total_items"] <= df["threshold"]
+except Exception as e:
+    st.error(f"🚨 Error loading data from Google Sheets: {e}")
+    st.stop()
+
+# ✅ Step 4: Display Machines That Need Refilling
 st.subheader("⚠️ Machines That Need Refilling")
 low_stock_machines = df[df["ready_to_fill"]]
 if not low_stock_machines.empty:
@@ -39,18 +48,11 @@ if not low_stock_machines.empty:
 else:
     st.success("✅ All machines have sufficient stock!")
 
-# ✅ Step 4: Load Data from Google Sheets
-try:
-    data = worksheet.get_all_records()
-    df = pd.DataFrame(data)
-    df["ready_to_fill"] = df["total_items"] <= df["threshold"]
-    st.subheader("📋 Vending Machine Stock Levels")
-    st.dataframe(df)
-except Exception as e:
-    st.error(f"🚨 Error loading data from Google Sheets: {e}")
-    st.stop()
+# ✅ Step 5: Vending Machine Stock Levels
+st.subheader("📋 Vending Machine Stock Levels")
+st.dataframe(df)
 
-# ✅ Step 5: Refill a Machine
+# ✅ Step 6: Refill a Machine
 st.subheader("🔄 Refill a Machine")
 machine_to_refill = st.selectbox("Select a machine", df["location"])
 new_stock = st.number_input("Enter new total stock:", min_value=0, max_value=500, step=1)
@@ -60,7 +62,7 @@ if st.button("Update Stock"):
     worksheet.update([df.columns.values.tolist()] + df.values.tolist())  # ✅ Update Google Sheets
     st.success(f"✅ {machine_to_refill} updated to {new_stock} items!")
 
-# ✅ Step 6: Adjust Refill Threshold
+# ✅ Step 7: Adjust Refill Threshold
 st.subheader("⚙️ Adjust Refill Threshold")
 machine_to_edit = st.selectbox("Select machine to edit threshold", df["location"])
 new_threshold = st.number_input("Enter new threshold:", min_value=0, max_value=500, step=1)
@@ -70,7 +72,7 @@ if st.button("Update Threshold"):
     worksheet.update([df.columns.values.tolist()] + df.values.tolist())  # ✅ Update Google Sheets
     st.success(f"✅ {machine_to_edit} threshold updated to {new_threshold}!")
 
-# ✅ Step 7: Add New Machine
+# ✅ Step 8: Add New Machine
 st.subheader("➕ Add a New Machine")
 new_machine = st.text_input("Enter new machine location")
 new_total = st.number_input("Initial stock:", min_value=0, max_value=500, step=1)
@@ -82,7 +84,7 @@ if st.button("Add Machine"):
     worksheet.update([df.columns.values.tolist()] + df.values.tolist())  # ✅ Update Google Sheets
     st.success(f"✅ {new_machine} added with {new_total} items and a threshold of {new_thresh}!")
 
-# ✅ Step 8: Plot Inventory Levels
+# ✅ Step 9: Plot Inventory Levels
 st.subheader("📊 Inventory Levels Chart")
 fig, ax = plt.subplots()
 ax.bar(df["location"], df["total_items"], color="blue", label="Total Items")
