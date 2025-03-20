@@ -4,7 +4,7 @@ import pandas as pd
 from google.oauth2.service_account import Credentials
 
 # 🔹 Streamlit App Title
-st.title("📊 Vending Machine Dashboard")
+st.title("Health-E Vend")
 
 # ✅ Step 1: Load Google Credentials from Streamlit Secrets
 try:
