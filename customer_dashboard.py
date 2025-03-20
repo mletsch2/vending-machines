@@ -75,7 +75,11 @@ with st.expander("🔄 Update Stock & Thresholds", expanded=False):
     # Refill a Machine
     with col1:
         st.subheader("🔄 Refill a Machine")
-        machine_to_refill = st.selectbox("Select a machine", df["location"])
+        machine_to_refill = st.selectbox(
+            "Select a machine",
+            df["location"],
+            format_func=lambda x: f"🔹 {x}"  # Keeps the dropdown list searchable
+        )
         new_stock = st.number_input("Enter new total stock:", min_value=0, max_value=500, step=1)
         if st.button("Update Stock"):
             df.loc[df["location"] == machine_to_refill, "total_items"] = new_stock
