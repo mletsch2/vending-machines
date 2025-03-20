@@ -36,7 +36,8 @@ except Exception as e:
     st.stop()
 
 # ✅ Machines That Need Refilling (Always Visible)
-st.subheader("⚠️ Machines That Need Refilling", divider="gray")
+st.markdown('<h3 style="text-align: center;">⚠️ Machines That Need Refilling</h3>', unsafe_allow_html=True)
+st.divider()  # Optional: Adds a gray divider like before
 low_stock_machines = df[df["ready_to_fill"]]
 if not low_stock_machines.empty:
     st.write(low_stock_machines)
@@ -127,8 +128,8 @@ st.markdown(f"""
     <div class="machine-stats">
         <h3>Machine Stats</h3>
         <table class="machine-stats-table">
-            <tr><th>Total Locations</th><td>{total_machines}</td></tr>
-            <tr><th>Total Items</th><td>{total_items}</td></tr>
+            <tr><th>Locations</th><td>{total_machines}</td></tr>
+            <tr><th>Items</th><td>{total_items}</td></tr>
             <tr><th>Needs Refill</th><td>{needs_refill}</td></tr>
         </table>
     </div>
