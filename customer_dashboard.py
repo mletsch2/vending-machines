@@ -3,35 +3,34 @@ import gspread
 import pandas as pd
 from google.oauth2.service_account import Credentials
 
-# 🔹 Streamlit App Title
+# 🔹 Set Dark Theme with Custom Styling
 st.set_page_config(page_title="Vending Machine Dashboard", layout="wide")
 
-# ✅ Apply Custom Styling for White Background & Light Gray Outlines
 st.markdown("""
     <style>
         body {
-            background-color: white;
+            background-color: #121212;
+            color: white;
         }
         .block-container {
             padding: 2rem;
-            background-color: white;
-            border: 1px solid lightgray;
-            border-radius: 8px;
+            background-color: #1e1e1e;
+            border-radius: 10px;
         }
         .stDataFrame {
-            border: 1px solid lightgray;
+            border: 1px solid #333333;
             border-radius: 5px;
             padding: 5px;
         }
         .stButton button {
-            background-color: #f0f0f0;
-            color: black;
+            background-color: #333333;
+            color: white;
             border-radius: 5px;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# ✅ Step 1: Load Google Credentials from Streamlit Secrets
+# ✅ Step 1: Load Google Credentials (Hidden Messages)
 try:
     creds_info = st.secrets["google"]
     scope = ["https://www.googleapis.com/auth/spreadsheets"]
@@ -43,7 +42,7 @@ except Exception:
 
 # ✅ Step 2: Connect to Google Sheets
 SHEET_ID = st.secrets["google"]["SHEET_ID"]
-SHEET_NAME = "Vending Data"  # Update if your sheet has a different name
+SHEET_NAME = "Vending Data"
 
 try:
     sheet = client.open_by_key(SHEET_ID)
@@ -61,7 +60,7 @@ except Exception:
     st.error("🚨 Error loading data from Google Sheets!")
     st.stop()
 
-# ✅ Step 4: Display Machines That Need Refilling (Moved to Top)
+# ✅ Step 4: Machines That Need Refilling (TOP PRIORITY SECTION)
 st.subheader("⚠️ Machines That Need Refilling")
 low_stock_machines = df[df["ready_to_fill"]]
 if not low_stock_machines.empty:
@@ -70,7 +69,7 @@ if not low_stock_machines.empty:
 else:
     st.success("✅ All machines have sufficient stock!")
 
-# ✅ Step 5: Refill a Machine (Moved Below "Machines That Need Refilling")
+# ✅ Step 5: Refill a Machine
 st.subheader("🔄 Refill a Machine")
 machine_to_refill = st.selectbox("Select a machine", df["location"])
 new_stock = st.number_input("Enter new total stock:", min_value=0, max_value=500, step=1)
@@ -80,7 +79,7 @@ if st.button("Update Stock"):
     worksheet.update([df.columns.values.tolist()] + df.values.tolist())  # ✅ Update Google Sheets
     st.success(f"✅ {machine_to_refill} updated to {new_stock} items!")
 
-# ✅ Step 6: Add a New Machine (Moved Below "Refill a Machine")
+# ✅ Step 6: Add a New Machine
 st.subheader("➕ Add a New Machine")
 new_machine = st.text_input("Enter new machine location")
 new_total = st.number_input("Initial stock:", min_value=0, max_value=500, step=1)
@@ -92,11 +91,11 @@ if st.button("Add Machine"):
     worksheet.update([df.columns.values.tolist()] + df.values.tolist())  # ✅ Update Google Sheets
     st.success(f"✅ {new_machine} added with {new_total} items and a threshold of {new_thresh}!")
 
-# ✅ Step 7: Display All Vending Machine Stock (Moved Below "Add a New Machine")
+# ✅ Step 7: Vending Machine Stock Levels
 st.subheader("📋 Vending Machine Stock Levels")
 st.dataframe(df)
 
-# ✅ Step 8: Summary Information (Moved Below Everything)
+# ✅ Step 8: Summary Information
 st.subheader("📊 Vending Machine Summary")
 st.write(f"**Total Locations:** {df.shape[0]}")
 st.write(f"**Total Items in Stock:** {df['total_items'].sum()}")
