@@ -47,33 +47,32 @@ else:
 
 # ✅ Collapsible Section: Update Stock & Thresholds
 with st.expander("🔄 Update Stock & Thresholds"):
-    # ✅ Refill a Machine (with searchable dropdown)
-    st.subheader("🔄 Refill a Machine")
-    machine_to_refill = st.selectbox(
-        "Select a machine",
-        options=df["location"].tolist(),
-        index=None,
-        placeholder="Type to search...",
-    )
+    search_refill = st.text_input("Search for a machine:")
+    filtered_machines = df[df["location"].str.contains(search_refill, case=False, na=False)]["location"].tolist()
+
+    machine_to_refill = st.selectbox("Select a machine",
+                                     options=filtered_machines if filtered_machines else ["No matches found"])
 
     new_stock = st.number_input("Enter new total stock:", min_value=0, max_value=500, step=1)
-    if st.button("Update Stock") and machine_to_refill:
+    if st.button("Update Stock") and machine_to_refill and machine_to_refill != "No matches found":
         df.loc[df["location"] == machine_to_refill, "total_items"] = new_stock
         df["ready_to_fill"] = df["total_items"] <= df["threshold"]
         worksheet.update([df.columns.values.tolist()] + df.values.tolist())  # ✅ Update Google Sheets
         st.success(f"✅ {machine_to_refill} updated to {new_stock} items!")
 
-    # ✅ Adjust Refill Threshold (with searchable dropdown)
+    # ✅ Adjust Refill Threshold (Dropdown + Search Box)
     st.subheader("⚙️ Adjust Refill Threshold")
-    machine_to_edit = st.selectbox(
-        "Select machine to edit threshold",
-        options=df["location"].tolist(),
-        index=None,
-        placeholder="Type to search...",
-    )
+
+    search_threshold = st.text_input("Search for a machine to edit threshold:")
+    filtered_machines_threshold = df[df["location"].str.contains(search_threshold, case=False, na=False)][
+        "location"].tolist()
+
+    machine_to_edit = st.selectbox("Select machine to edit threshold",
+                                   options=filtered_machines_threshold if filtered_machines_threshold else [
+                                       "No matches found"])
 
     new_threshold = st.number_input("Enter new threshold:", min_value=0, max_value=500, step=1)
-    if st.button("Update Threshold") and machine_to_edit:
+    if st.button("Update Threshold") and machine_to_edit and machine_to_edit != "No matches found":
         df.loc[df["location"] == machine_to_edit, "threshold"] = new_threshold
         df["ready_to_fill"] = df["total_items"] <= df["threshold"]
         worksheet.update([df.columns.values.tolist()] + df.values.tolist())  # ✅ Update Google Sheets
