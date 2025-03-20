@@ -1,15 +1,17 @@
 import streamlit as st
 import gspread
 import pandas as pd
-import matplotlib.pyplot as plt
 from google.oauth2.service_account import Credentials
 
-# 🎨 Custom Styling
+# 🎨 Custom Theme Styling
 st.markdown(
     """
     <style>
-        .main {background-color: #f8f9fa;}
+        body {background-color: #f5f5f5;}
+        .main {background-color: #ffffff; padding: 20px; border-radius: 10px;}
+        .stDataFrame {border-radius: 10px;}
         div[data-testid="stMetric"] > label { font-size: 18px; font-weight: bold; }
+        .stExpander {border: 1px solid #ddd; border-radius: 10px;}
     </style>
     """,
     unsafe_allow_html=True,
@@ -24,7 +26,7 @@ try:
     scope = ["https://www.googleapis.com/auth/spreadsheets"]
     creds = Credentials.from_service_account_info(creds_info, scopes=scope)
     client = gspread.authorize(creds)
-    st.success("✅ Google authentication successful!")
+    # st.success("✅ Google authentication successful!")  # 🔹 Commented out to clean UI
 except Exception as e:
     st.error(f"🚨 Google authentication failed: {e}")
     st.stop()
@@ -35,7 +37,7 @@ SHEET_NAME = "Vending Data"
 
 try:
     sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
-    st.success(f"✅ Connected to Google Sheet: {SHEET_NAME}")
+    # st.success(f"✅ Connected to Google Sheet: {SHEET_NAME}")  # 🔹 Commented out for clean UI
 except Exception as e:
     st.error(f"🚨 Error accessing Google Sheets: {e}")
     st.stop()
@@ -46,13 +48,22 @@ try:
     df = pd.DataFrame(data)
     df["ready_to_fill"] = df["total_items"] <= df["threshold"]
 
+    # ⚠️ **Machines That Need Refilling** - MOVED TO TOP
+    st.subheader("⚠️ Machines That Need Refilling")
+    low_stock_machines = df[df["ready_to_fill"]]
+    if not low_stock_machines.empty:
+        st.write(low_stock_machines.style.set_properties(**{"background-color": "#ffcccc"}))
+        st.warning("⚠️ Some machines need refilling!")
+    else:
+        st.success("✅ All machines have sufficient stock!")
+
     # 📊 Display Key Metrics
     col1, col2, col3 = st.columns(3)
     col1.metric("📍 Locations", len(df))
     col2.metric("🛒 Total Items", df["total_items"].sum())
     col3.metric("⚠️ Needs Refill", df["ready_to_fill"].sum())
 
-    # 📋 Styled Data Table
+    # 📋 Styled Data Table - General Stock Levels
     st.subheader("📋 Vending Machine Stock Levels")
     st.dataframe(df.style.applymap(lambda x: "background-color: #ffcccc" if x else "", subset=["ready_to_fill"]))
 except Exception as e:
@@ -97,25 +108,5 @@ with st.expander("➕ Add a New Machine", expanded=False):
         df["ready_to_fill"] = df["total_items"] <= df["threshold"]
         sheet.update([df.columns.values.tolist()] + df.values.tolist())  # ✅ Update Google Sheets
         st.success(f"✅ {new_machine} added with {new_total} items and a threshold of {new_thresh}!")
-
-# ⚠️ **Machines That Need Refilling**
-st.subheader("⚠️ Machines That Need Refilling")
-low_stock_machines = df[df["ready_to_fill"]]
-if not low_stock_machines.empty:
-    st.write(low_stock_machines)
-    st.warning("⚠️ Some machines need refilling!")
-else:
-    st.success("✅ All machines have sufficient stock!")
-
-# 📊 **Inventory Chart**
-st.subheader("📊 Inventory Levels Chart")
-fig, ax = plt.subplots()
-ax.bar(df["location"], df["total_items"], color="#4285F4", label="Total Items")
-ax.axhline(y=df["threshold"].mean(), color="red", linestyle="--", label="Avg Threshold")
-ax.set_xlabel("Location")
-ax.set_ylabel("Total Items")
-ax.set_title("Inventory Levels by Location")
-ax.legend()
-st.pyplot(fig)
 
 st.caption("📌 Changes are automatically saved to Google Sheets.")
