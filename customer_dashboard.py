@@ -3,34 +3,37 @@ import gspread
 import pandas as pd
 from google.oauth2.service_account import Credentials
 
-# 🔹 Set Dark Theme with Custom Styling
-st.set_page_config(page_title="Vending Machine Dashboard", layout="wide")
+# ✅ Set Streamlit Page Config for Centered Layout
+st.set_page_config(page_title="Vending Machine Dashboard", layout="centered")
 
+# ✅ Custom Styling for Dark Gray Theme (Not full black)
 st.markdown("""
     <style>
         body {
-            background-color: #121212;
+            background-color: #1a1a1a;
             color: white;
         }
         .block-container {
-            padding: 2rem;
-            background-color: #1e1e1e;
+            padding: 3rem;
+            background-color: #242424;
             border-radius: 10px;
+            max-width: 800px;
+            margin: auto;
         }
         .stDataFrame {
-            border: 1px solid #333333;
+            border: 1px solid #444;
             border-radius: 5px;
             padding: 5px;
         }
         .stButton button {
-            background-color: #333333;
+            background-color: #333;
             color: white;
             border-radius: 5px;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# ✅ Step 1: Load Google Credentials (Hidden Messages)
+# ✅ Step 1: Load Google Credentials (Hidden from UI)
 try:
     creds_info = st.secrets["google"]
     scope = ["https://www.googleapis.com/auth/spreadsheets"]
@@ -60,7 +63,7 @@ except Exception:
     st.error("🚨 Error loading data from Google Sheets!")
     st.stop()
 
-# ✅ Step 4: Machines That Need Refilling (TOP PRIORITY SECTION)
+# ✅ Step 4: Machines That Need Refilling (TOP SECTION)
 st.subheader("⚠️ Machines That Need Refilling")
 low_stock_machines = df[df["ready_to_fill"]]
 if not low_stock_machines.empty:
@@ -69,15 +72,27 @@ if not low_stock_machines.empty:
 else:
     st.success("✅ All machines have sufficient stock!")
 
-# ✅ Step 5: Refill a Machine
-st.subheader("🔄 Refill a Machine")
-machine_to_refill = st.selectbox("Select a machine", df["location"])
-new_stock = st.number_input("Enter new total stock:", min_value=0, max_value=500, step=1)
-if st.button("Update Stock"):
-    df.loc[df["location"] == machine_to_refill, "total_items"] = new_stock
-    df["ready_to_fill"] = df["total_items"] <= df["threshold"]
-    worksheet.update([df.columns.values.tolist()] + df.values.tolist())  # ✅ Update Google Sheets
-    st.success(f"✅ {machine_to_refill} updated to {new_stock} items!")
+# ✅ Step 5: Collapsible Section for Refill & Thresholds
+with st.expander("🔄 Update Stock & Thresholds", expanded=True):
+    # ✅ **Refill a Machine**
+    st.subheader("🛠️ Refill a Machine")
+    machine_to_refill = st.selectbox("Select a machine", df["location"], help="Type to filter", index=None)
+    new_stock = st.number_input("Enter new total stock:", min_value=0, max_value=500, step=1)
+    if st.button("Update Stock"):
+        df.loc[df["location"] == machine_to_refill, "total_items"] = new_stock
+        df["ready_to_fill"] = df["total_items"] <= df["threshold"]
+        worksheet.update([df.columns.values.tolist()] + df.values.tolist())  # ✅ Update Google Sheets
+        st.success(f"✅ {machine_to_refill} updated to {new_stock} items!")
+
+    # ✅ **Change Refill Threshold**
+    st.subheader("⚙️ Adjust Refill Threshold")
+    machine_to_edit = st.selectbox("Select machine to edit threshold", df["location"], help="Type to filter", index=None)
+    new_threshold = st.number_input("Enter new threshold:", min_value=0, max_value=500, step=1)
+    if st.button("Update Threshold"):
+        df.loc[df["location"] == machine_to_edit, "threshold"] = new_threshold
+        df["ready_to_fill"] = df["total_items"] <= df["threshold"]
+        worksheet.update([df.columns.values.tolist()] + df.values.tolist())  # ✅ Update Google Sheets
+        st.success(f"✅ {machine_to_edit} threshold updated to {new_threshold}!")
 
 # ✅ Step 6: Add a New Machine
 st.subheader("➕ Add a New Machine")
