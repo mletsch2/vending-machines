@@ -47,34 +47,36 @@ else:
 
 # ✅ Collapsible Section: Update Stock & Thresholds
 with st.expander("🔄 Update Stock & Thresholds"):
-    # Refill a Machine with Searchable Dropdown
-    st.subheader("Refill a Machine")
+    # ✅ Refill a Machine (with searchable dropdown)
+    st.subheader("🔄 Refill a Machine")
     machine_to_refill = st.selectbox(
-        "Select a machine to refill",
-        df["location"],
+        "Select a machine",
+        options=df["location"].tolist(),
         index=None,
         placeholder="Type to search...",
     )
+
     new_stock = st.number_input("Enter new total stock:", min_value=0, max_value=500, step=1)
-    if st.button("Update Stock"):
+    if st.button("Update Stock") and machine_to_refill:
         df.loc[df["location"] == machine_to_refill, "total_items"] = new_stock
         df["ready_to_fill"] = df["total_items"] <= df["threshold"]
-        sheet.update([df.columns.values.tolist()] + df.values.tolist())
+        worksheet.update([df.columns.values.tolist()] + df.values.tolist())  # ✅ Update Google Sheets
         st.success(f"✅ {machine_to_refill} updated to {new_stock} items!")
 
-    # Adjust Refill Threshold with Searchable Dropdown
-    st.subheader("Adjust Refill Threshold")
+    # ✅ Adjust Refill Threshold (with searchable dropdown)
+    st.subheader("⚙️ Adjust Refill Threshold")
     machine_to_edit = st.selectbox(
         "Select machine to edit threshold",
-        df["location"],
+        options=df["location"].tolist(),
         index=None,
         placeholder="Type to search...",
     )
+
     new_threshold = st.number_input("Enter new threshold:", min_value=0, max_value=500, step=1)
-    if st.button("Update Threshold"):
+    if st.button("Update Threshold") and machine_to_edit:
         df.loc[df["location"] == machine_to_edit, "threshold"] = new_threshold
         df["ready_to_fill"] = df["total_items"] <= df["threshold"]
-        sheet.update([df.columns.values.tolist()] + df.values.tolist())
+        worksheet.update([df.columns.values.tolist()] + df.values.tolist())  # ✅ Update Google Sheets
         st.success(f"✅ {machine_to_edit} threshold updated to {new_threshold}!")
 
 # ✅ Collapsible Section: Add a New Machine
