@@ -141,42 +141,56 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 🔁 Sales Report Processing
+# ✅ Sales Report Processing
 def process_sales_report(file, worksheet):
     try:
-        # Read uploaded CSV
-        df_sales = pd.read_csv(file)
+        import pandas as pd
+        from io import StringIO
 
-        # ✅ Normalize column names
-        df_sales.columns = df_sales.columns.str.strip().str.lower()
+        # Read and decode uploaded file
+        content = file.read().decode("utf-8")
+        df = pd.read_csv(StringIO(content))
 
-        # Remove "Two-Tier Pricing" rows in the 'details' column
-        df_sales = df_sales[~df_sales['details'].str.contains("Two-Tier Pricing", na=False)]
+        # Normalize column headers
+        df.columns = df.columns.str.lower()
 
-        # Count transactions per location
-        transactions = df_sales.groupby("location").size().reset_index(name="transactions")
+        if "location" not in df.columns or "details" not in df.columns:
+            st.error("CSV must contain 'Location' and 'Details' columns.")
+            return
 
-        # Load existing sheet data
-        data = worksheet.get_all_records()
-        df_sheet = pd.DataFrame(data)
+        sales_summary = {}
 
-        # ✅ Normalize columns in Google Sheet too
-        df_sheet.columns = df_sheet.columns.str.strip().str.lower()
-
-        # Update total_items by subtracting transactions
-        for _, row in transactions.iterrows():
+        for _, row in df.iterrows():
             location = row["location"]
-            num_transactions = row["transactions"]
+            details = row["details"]
 
-            if location in df_sheet["location"].values:
-                df_sheet.loc[df_sheet["location"] == location, "total_items"] -= num_transactions
+            if pd.isna(location) or pd.isna(details):
+                continue
 
-        # ✅ Recalculate refill status
-        df_sheet["ready_to_fill"] = df_sheet["total_items"] <= df_sheet["threshold"]
+            # Skip Two-Tier Pricing
+            item_parts = [item.strip() for item in details.split(",") if "two-tier pricing" not in item.lower()]
+            item_count = len(item_parts)
 
-        # Update Google Sheet
-        worksheet.update([df_sheet.columns.tolist()] + df_sheet.values.tolist())
+            sales_summary[location] = sales_summary.get(location, 0) + item_count
 
+        # Update Google Sheet data
+        sheet_data = worksheet.get_all_records()
+        sheet_df = pd.DataFrame(sheet_data)
+
+        # Normalize location strings for matching
+        sheet_df["location"] = sheet_df["location"].str.strip().str.lower()
+
+        for location, items_sold in sales_summary.items():
+            location = location.strip().lower()
+            mask = sheet_df["location"] == location
+            if mask.any():
+                sheet_df.loc[mask, "total_items"] = sheet_df.loc[mask, "total_items"] - items_sold
+
+        # Ensure no negative inventory
+        sheet_df["total_items"] = sheet_df["total_items"].clip(lower=0)
+        sheet_df["ready_to_fill"] = sheet_df["total_items"] <= sheet_df["threshold"]
+
+        worksheet.update([sheet_df.columns.values.tolist()] + sheet_df.values.tolist())
         st.success("✅ Sales report processed and inventory updated!")
 
     except Exception as e:
