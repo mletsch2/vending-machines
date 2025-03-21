@@ -3,6 +3,8 @@ import gspread
 import pandas as pd
 from google.oauth2.service_account import Credentials
 import subprocess
+import sys
+import os
 
 # Streamlit App Title
 st.markdown("<h1 style='text-align: center;'>Health-E Vend</h1>", unsafe_allow_html=True)
@@ -137,8 +139,6 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-import sys
-import os
 from parse_sales_report import parse_and_update
 
 # Add a button to trigger parsing
