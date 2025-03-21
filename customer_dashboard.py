@@ -137,8 +137,6 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-st.subheader("📤 Upload and Process Sales Report")
-
 from parse_sales_report import parse_and_update
 
 # Add a button to trigger parsing
