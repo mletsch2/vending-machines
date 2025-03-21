@@ -183,5 +183,12 @@ def process_sales_report(csv_path, worksheet):
 # ✅ **Button to Process Sales Report**
 st.subheader("📂 Process Sales Report")
 uploaded_file = st.file_uploader("Upload daily sales report (CSV)", type=["csv"])
-if uploaded_file and st.button("Process Sales Report"):
-    process_sales_report(uploaded_file)
+if uploaded_file is not None:
+    if st.button("📤 Process Sales Report"):
+        try:
+            process_sales_report(uploaded_file)
+            st.success("✅ Sales report processed and Google Sheet updated!")
+        except Exception as e:
+            st.error(f"🚨 Error processing sales report: {e}")
+else:
+    st.info("📥 Please upload a CSV sales report to begin processing.")
