@@ -1,35 +1,65 @@
-import re
 import pandas as pd
-from bs4 import BeautifulSoup
+import gspread
+from google.oauth2.service_account import Credentials
 
-# 🔹 Load the HTML file
-with open("sales_report.html", "r", encoding="utf-8") as file:
-    html_content = file.read()
+# === STEP 1: PARSE RAW SALES REPORT ===
+def parse_sales_report(csv_path):
+    df = pd.read_csv(csv_path)
 
-# 🔹 Parse the HTML
-soup = BeautifulSoup(html_content, "html.parser")
+    cleaned_data = []
 
-# 🔹 Extract all devices
-device_data = []
-devices = soup.find_all(string=re.compile(r"Device: VJ\d+"))  # Matches "Device: VJ..."
-for device in devices:
-    device_id = device.split(":")[-1].strip()
-    location_tag = device.find_next(text=re.compile(r"Location:"))  # Find location name
-    location = location_tag.split(":")[-1].strip() if location_tag else "Unknown"
+    for _, row in df.iterrows():
+        location = row.get("Location")
+        details = str(row.get("Details"))
 
-    # 🔹 Count transactions (Each line like `42($1.00)` = **1 transaction**)
-    transaction_count = 0
-    details_section = device.find_all_next(text=re.compile(r"\d+\(\$\d+\.\d{2}\)"))  # Matches `42($1.00)`
+        if "Two-Tier Pricing" in details or location is None:
+            continue
 
-    for detail in details_section:
-        if "Two-Tier Pricing" not in detail:  # ✅ Exclude Two-Tier Pricing
-            transaction_count += 1  # ✅ Each valid entry = **1 transaction**
+        # Count actual items (based on how many item codes like 13($1.00) there are)
+        item_count = details.count("(")
 
-    device_data.append({"Device": device_id, "Location": location, "Total Transactions": transaction_count})
+        if item_count > 0:
+            cleaned_data.append({
+                "location": location.strip(),
+                "transactions": item_count
+            })
 
-# 🔹 Convert to DataFrame
-df = pd.DataFrame(device_data)
+    parsed_df = pd.DataFrame(cleaned_data)
+    return parsed_df.groupby("location", as_index=False).sum()
 
-# ✅ Display & Save Final Data
-print(df)
-df.to_csv("cleaned_sales_report.csv", index=False)
+
+# === STEP 2: UPDATE GOOGLE SHEET ===
+def update_machine_stock(parsed_df):
+    scope = ["https://www.googleapis.com/auth/spreadsheets"]
+    creds = Credentials.from_service_account_info(st.secrets["google"], scopes=scope)
+    client = gspread.authorize(creds)
+
+    SHEET_ID = st.secrets["google"]["SHEET_ID"]
+    SHEET_NAME = st.secrets["google"]["SHEET_NAME"]
+
+    sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
+    data = sheet.get_all_records()
+    df = pd.DataFrame(data)
+
+    for _, row in parsed_df.iterrows():
+        location = row["location"]
+        transactions = row["transactions"]
+
+        if location in df["location"].values:
+            current_stock = df.loc[df["location"] == location, "total_items"].values[0]
+            updated_stock = max(0, current_stock - transactions)  # Ensure stock doesn’t go negative
+            df.loc[df["location"] == location, "total_items"] = updated_stock
+
+    # Update "ready_to_fill" status
+    df["ready_to_fill"] = df["total_items"] <= df["threshold"]
+
+    # Push updated data to Google Sheets
+    sheet.update([df.columns.values.tolist()] + df.values.tolist())
+    print("✅ Google Sheet successfully updated!")
+
+
+if __name__ == "__main__":
+    csv_path = "sales_report.csv"  # Name of the raw daily sales report
+    parsed_df = parse_sales_report(csv_path)
+    print(parsed_df)  # Optional: preview parsed data
+    update_machine_stock(parsed_df)
