@@ -168,7 +168,7 @@ def process_sales_report(file, worksheet):
                 continue
 
             # Skip Two-Tier Pricing
-            item_parts = [item.strip() for item in details.split(",") if "two-tier pricing" not in item.lower()]
+            item_parts = [item.strip() for item in details.split(",") if "two-tier pricing" not in item.lower and "discrepancy" not in item.lower()]
             item_count = len(item_parts)
 
             sales_summary[location] = sales_summary.get(location, 0) + item_count
@@ -196,7 +196,7 @@ def process_sales_report(file, worksheet):
     except Exception as e:
         st.error(f"🚨 Error processing sales report: {e}")
 
-# ✅ Sales Report Processing
+# ✅ Sales Report Processing 2
 st.subheader("📤 Upload Sales Report")
 uploaded_file = st.file_uploader("Choose a sales report CSV file", type="csv")
 
