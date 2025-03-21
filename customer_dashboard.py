@@ -137,6 +137,8 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
+import sys
+import os
 from parse_sales_report import parse_and_update
 
 # Add a button to trigger parsing
