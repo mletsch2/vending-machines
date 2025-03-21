@@ -42,7 +42,7 @@ except Exception as e:
     st.stop()
 
 # ✅ Machines That Need Refilling (Always Visible)
-st.markdown('<h3 style="text-align: center;">⚠️ Machines That Need Refilling</h3>', unsafe_allow_html=True)
+st.markdown('<h3 style="text-align: center;">Machines That Need Refilling</h3>', unsafe_allow_html=True)
 low_stock_machines = df[df["ready_to_fill"]]
 if not low_stock_machines.empty:
     st.write(low_stock_machines)
