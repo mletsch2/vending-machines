@@ -201,8 +201,9 @@ st.subheader("📤 Upload Sales Report")
 uploaded_file = st.file_uploader("Choose a sales report CSV file", type="csv")
 
 if uploaded_file is not None:
-    try:
-        process_sales_report(uploaded_file, worksheet)
-        st.success("✅ Sales report processed and Google Sheet updated!")
-    except Exception as e:
-        st.error(f"🚨 Error processing sales report: {e}")
+    if st.button("📈 Process Sales Report"):
+        try:
+            process_sales_report(uploaded_file, worksheet)
+            st.success("✅ Sales report processed and Google Sheet updated!")
+        except Exception as e:
+            st.error(f"🚨 Error processing sales report: {e}")
