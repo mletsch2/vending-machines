@@ -23,6 +23,8 @@ except Exception as e:
 # ✅ Connect to Google Sheets
 SHEET_ID = st.secrets["google"]["SHEET_ID"]
 SHEET_NAME = st.secrets["google"]["SHEET_NAME"]
+sheet = client.open_by_key(SHEET_ID)
+worksheet = sheet.worksheet(SHEET_NAME)
 
 try:
     sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
@@ -181,12 +183,12 @@ def process_sales_report(file, worksheet):
         st.error(f"🚨 Error processing sales report: {e}")
 
 # ✅ Sales Report Processing
-st.subheader("📤 Upload Daily Sales Report (CSV)")
+st.subheader("📤 Upload Sales Report")
 uploaded_file = st.file_uploader("Choose a sales report CSV file", type="csv")
 
 if uploaded_file is not None:
     try:
-        process_sales_report(uploaded_file, worksheet)  # ✅ Pass worksheet as second argument
-        st.success("✅ Sales report processed and inventory updated!")
+        process_sales_report(uploaded_file, worksheet)
+        st.success("✅ Sales report processed and Google Sheet updated!")
     except Exception as e:
         st.error(f"🚨 Error processing sales report: {e}")
