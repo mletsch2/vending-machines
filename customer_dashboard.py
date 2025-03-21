@@ -3,29 +3,9 @@ import gspread
 import pandas as pd
 from google.oauth2.service_account import Credentials
 
-# Define the logo path (Make sure it's in your project root folder)
-logo_path = "health-e-vend-logo.png"
+# Regular header title
+st.markdown("<h1 style='text-align: center;'>Health-E Vend</h1>", unsafe_allow_html=True)
 
-# Custom HTML for the centered logo header
-st.markdown(
-    f"""
-    <style>
-        .logo-container {{
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }}
-        .logo-container img {{
-            max-width: 300px; /* Adjust size as needed */
-            height: auto;
-        }}
-    </style>
-    <div class="logo-container">
-        <img src="{logo_path}" alt="Health-E Vend Logo">
-    </div>
-    """,
-    unsafe_allow_html=True
-)
 st.divider()  # Optional: Keeps the styling clean
 
 # ✅ Load Google Credentials from Streamlit Secrets
