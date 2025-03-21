@@ -139,14 +139,41 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-from parse_sales_report import parse_and_update
-
-# Add a button to trigger parsing
-st.subheader("📥 Update from Daily Sales Report")
-if st.button("Parse and Apply Sales Report"):
+# 🔥 SALES REPORT PROCESSING FUNCTION 🔥
+def process_sales_report(sales_report_path):
     try:
-        updated = parse_and_update(worksheet)
-        st.success("✅ Sales report parsed and stock updated!")
-        st.write(updated)  # optional, shows what was updated
+        # Read CSV sales report
+        sales_df = pd.read_csv(sales_report_path)
+
+        # Extract necessary columns
+        sales_df = sales_df[["Device", "Location", "Details"]]
+
+        # Remove "Two-Tier Pricing" rows
+        sales_df = sales_df[~sales_df["Details"].str.contains("Two-Tier Pricing", na=False)]
+
+        # Count total transactions per location
+        sales_counts = sales_df.groupby("Location")["Details"].count().reset_index()
+        sales_counts.rename(columns={"Details": "total_sales"}, inplace=True)
+
+        # Merge with vending machine data
+        df_updated = df.copy()
+        df_updated = df_updated.merge(sales_counts, on="Location", how="left").fillna(0)
+
+        # Update total items (subtracting sales)
+        df_updated["total_items"] = df_updated["total_items"] - df_updated["total_sales"]
+
+        # Ensure negative values don't exist
+        df_updated["total_items"] = df_updated["total_items"].apply(lambda x: max(x, 0))
+
+        # ✅ Update Google Sheets
+        sheet.update([df_updated.columns.values.tolist()] + df_updated.values.tolist())
+
+        st.success("✅ Sales report processed & vending machine data updated!")
     except Exception as e:
         st.error(f"🚨 Error processing sales report: {e}")
+
+# ✅ **Button to Process Sales Report**
+st.subheader("📂 Process Sales Report")
+uploaded_file = st.file_uploader("Upload daily sales report (CSV)", type=["csv"])
+if uploaded_file and st.button("Process Sales Report"):
+    process_sales_report(uploaded_file)
