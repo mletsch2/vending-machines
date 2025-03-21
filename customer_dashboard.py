@@ -139,46 +139,46 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 🔥 SALES REPORT PROCESSING FUNCTION 🔥
-
-def process_sales_report(csv_path, worksheet):
+# 🔁 Sales Report Processing
+def process_sales_report(file, worksheet):
     try:
-        # Load CSV
-        df = pd.read_csv(csv_path)
+        # Read uploaded CSV
+        df_sales = pd.read_csv(file)
 
-        # ✅ Convert Location column to lowercase to match Google Sheet
-        df["Location"] = df["Location"].str.lower()
+        # ✅ Normalize column names
+        df_sales.columns = df_sales.columns.str.strip().str.lower()
 
-        # Count transactions, excluding any with 'Two-Tier Pricing'
-        def count_valid_transactions(details):
-            if pd.isna(details):
-                return 0
-            return sum(1 for item in details.split(",") if "Two-Tier Pricing" not in item)
+        # Remove "Two-Tier Pricing" rows in the 'details' column
+        df_sales = df_sales[~df_sales['details'].str.contains("Two-Tier Pricing", na=False)]
 
-        # Calculate total transactions per location
-        df["Transaction Count"] = df["Details"].apply(count_valid_transactions)
-        transaction_summary = df.groupby("Location")["Transaction Count"].sum().reset_index()
+        # Count transactions per location
+        transactions = df_sales.groupby("location").size().reset_index(name="transactions")
 
-        # Load existing sheet into a DataFrame
-        sheet_data = worksheet.get_all_records()
-        sheet_df = pd.DataFrame(sheet_data)
+        # Load existing sheet data
+        data = worksheet.get_all_records()
+        df_sheet = pd.DataFrame(data)
 
-        # ✅ Also make sure sheet column is lowercase to ensure match
-        sheet_df["location"] = sheet_df["location"].str.lower()
+        # ✅ Normalize columns in Google Sheet too
+        df_sheet.columns = df_sheet.columns.str.strip().str.lower()
 
-        # Subtract transactions from current total_items
-        for _, row in transaction_summary.iterrows():
-            location = row["Location"]
-            transactions = row["Transaction Count"]
-            if location in sheet_df["location"].values:
-                sheet_df.loc[sheet_df["location"] == location, "total_items"] -= transactions
+        # Update total_items by subtracting transactions
+        for _, row in transactions.iterrows():
+            location = row["location"]
+            num_transactions = row["transactions"]
 
-        # Write updated data back to the sheet
-        worksheet.update([sheet_df.columns.tolist()] + sheet_df.values.tolist())
+            if location in df_sheet["location"].values:
+                df_sheet.loc[df_sheet["location"] == location, "total_items"] -= num_transactions
 
-        return True, "✅ Sales report processed and totals updated!"
+        # ✅ Recalculate refill status
+        df_sheet["ready_to_fill"] = df_sheet["total_items"] <= df_sheet["threshold"]
+
+        # Update Google Sheet
+        worksheet.update([df_sheet.columns.tolist()] + df_sheet.values.tolist())
+
+        st.success("✅ Sales report processed and inventory updated!")
+
     except Exception as e:
-        return False, f"🚨 Error processing sales report: {e}"
+        st.error(f"🚨 Error processing sales report: {e}")
 
 # ✅ **Button to Process Sales Report**
 st.subheader("📂 Process Sales Report")
