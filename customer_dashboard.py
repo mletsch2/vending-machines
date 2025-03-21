@@ -140,37 +140,45 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # 🔥 SALES REPORT PROCESSING FUNCTION 🔥
-def process_sales_report(sales_report_path):
+
+def process_sales_report(csv_path, worksheet):
     try:
-        # Read CSV sales report
-        sales_df = pd.read_csv(sales_report_path)
+        # Load CSV
+        df = pd.read_csv(csv_path)
 
-        # Extract necessary columns
-        sales_df = sales_df[["Device", "Location", "Details"]]
+        # ✅ Convert Location column to lowercase to match Google Sheet
+        df["Location"] = df["Location"].str.lower()
 
-        # Remove "Two-Tier Pricing" rows
-        sales_df = sales_df[~sales_df["Details"].str.contains("Two-Tier Pricing", na=False)]
+        # Count transactions, excluding any with 'Two-Tier Pricing'
+        def count_valid_transactions(details):
+            if pd.isna(details):
+                return 0
+            return sum(1 for item in details.split(",") if "Two-Tier Pricing" not in item)
 
-        # Count total transactions per location
-        sales_counts = sales_df.groupby("Location")["Details"].count().reset_index()
-        sales_counts.rename(columns={"Details": "total_sales"}, inplace=True)
+        # Calculate total transactions per location
+        df["Transaction Count"] = df["Details"].apply(count_valid_transactions)
+        transaction_summary = df.groupby("Location")["Transaction Count"].sum().reset_index()
 
-        # Merge with vending machine data
-        df_updated = df.copy()
-        df_updated = df_updated.merge(sales_counts, on="Location", how="left").fillna(0)
+        # Load existing sheet into a DataFrame
+        sheet_data = worksheet.get_all_records()
+        sheet_df = pd.DataFrame(sheet_data)
 
-        # Update total items (subtracting sales)
-        df_updated["total_items"] = df_updated["total_items"] - df_updated["total_sales"]
+        # ✅ Also make sure sheet column is lowercase to ensure match
+        sheet_df["location"] = sheet_df["location"].str.lower()
 
-        # Ensure negative values don't exist
-        df_updated["total_items"] = df_updated["total_items"].apply(lambda x: max(x, 0))
+        # Subtract transactions from current total_items
+        for _, row in transaction_summary.iterrows():
+            location = row["Location"]
+            transactions = row["Transaction Count"]
+            if location in sheet_df["location"].values:
+                sheet_df.loc[sheet_df["location"] == location, "total_items"] -= transactions
 
-        # ✅ Update Google Sheets
-        sheet.update([df_updated.columns.values.tolist()] + df_updated.values.tolist())
+        # Write updated data back to the sheet
+        worksheet.update([sheet_df.columns.tolist()] + sheet_df.values.tolist())
 
-        st.success("✅ Sales report processed & vending machine data updated!")
+        return True, "✅ Sales report processed and totals updated!"
     except Exception as e:
-        st.error(f"🚨 Error processing sales report: {e}")
+        return False, f"🚨 Error processing sales report: {e}"
 
 # ✅ **Button to Process Sales Report**
 st.subheader("📂 Process Sales Report")
