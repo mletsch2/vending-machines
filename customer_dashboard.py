@@ -3,11 +3,25 @@ import gspread
 import pandas as pd
 from google.oauth2.service_account import Credentials
 
-# Load and Display the Centered Logo
+# Define the logo path (Make sure it's in your project root folder)
+logo_path = "health-e-vend-logo.jpeg"
+
+# Custom HTML for the centered logo header
 st.markdown(
-    """
-    <div style="text-align: center;">
-        <img src="health_e_vend_logo.jpeg" alt="Health-E Vend Logo" width="250">
+    f"""
+    <style>
+        .logo-container {{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }}
+        .logo-container img {{
+            max-width: 300px; /* Adjust size as needed */
+            height: auto;
+        }}
+    </style>
+    <div class="logo-container">
+        <img src="{logo_path}" alt="Health-E Vend Logo">
     </div>
     """,
     unsafe_allow_html=True
