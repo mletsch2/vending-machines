@@ -4,7 +4,7 @@ import pandas as pd
 from google.oauth2.service_account import Credentials
 
 # Define the logo path (Make sure it's in your project root folder)
-logo_path = "health-e-vend-logo.jpeg"
+logo_path = "health-e-vend-logo.png"
 
 # Custom HTML for the centered logo header
 st.markdown(
