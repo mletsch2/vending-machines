@@ -97,7 +97,7 @@ with st.expander("➕ Add a New Machine"):
 with st.expander("📋 Vending Machine Stock Levels"):
     st.dataframe(df)
 
-# ✅ Centered Machine Stats
+# ✅ Centered Machine Stats (Without Title)
 st.markdown("""
     <style>
         .machine-stats {
@@ -130,7 +130,6 @@ needs_refill = (df["ready_to_fill"]).sum()
 
 st.markdown(f"""
     <div class="machine-stats">
-        <h3>Machine Stats</h3>
         <table class="machine-stats-table">
             <tr><th>Locations</th><td>{total_machines}</td></tr>
             <tr><th>Items</th><td>{total_items}</td></tr>
