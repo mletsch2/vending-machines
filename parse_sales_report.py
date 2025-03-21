@@ -1,65 +1,35 @@
 import pandas as pd
-import gspread
-from google.oauth2.service_account import Credentials
+import re
 
-# === STEP 1: PARSE RAW SALES REPORT ===
-def parse_sales_report(csv_path):
-    df = pd.read_csv(csv_path)
+def parse_and_update(sheet):
+    df = pd.read_csv("sales_report.csv")
 
     cleaned_data = []
 
-    for _, row in df.iterrows():
+    for index, row in df.iterrows():
         location = row.get("Location")
-        details = str(row.get("Details"))
+        details = str(row.get("Details", ""))
 
-        if "Two-Tier Pricing" in details or location is None:
-            continue
+        if location and "Two-Tier Pricing" not in details:
+            # Count how many individual items were sold in this row
+            item_count = len([item for item in details.split(",") if "Two-Tier Pricing" not in item and item.strip()])
+            if item_count > 0:
+                cleaned_data.append((location.strip(), item_count))
 
-        # Count actual items (based on how many item codes like 13($1.00) there are)
-        item_count = details.count("(")
+    # Aggregate item counts by location
+    location_sales = {}
+    for location, count in cleaned_data:
+        location_sales[location] = location_sales.get(location, 0) + count
 
-        if item_count > 0:
-            cleaned_data.append({
-                "location": location.strip(),
-                "transactions": item_count
-            })
+    # Load the Google Sheet
+    sheet_data = sheet.get_all_records()
+    df_sheet = pd.DataFrame(sheet_data)
 
-    parsed_df = pd.DataFrame(cleaned_data)
-    return parsed_df.groupby("location", as_index=False).sum()
+    # Update item counts
+    for loc, sold in location_sales.items():
+        df_sheet.loc[df_sheet["location"] == loc, "total_items"] -= sold
 
+    # Push back to the sheet
+    sheet.update([df_sheet.columns.values.tolist()] + df_sheet.values.tolist())
 
-# === STEP 2: UPDATE GOOGLE SHEET ===
-def update_machine_stock(parsed_df):
-    scope = ["https://www.googleapis.com/auth/spreadsheets"]
-    creds = Credentials.from_service_account_info(st.secrets["google"], scopes=scope)
-    client = gspread.authorize(creds)
-
-    SHEET_ID = st.secrets["google"]["SHEET_ID"]
-    SHEET_NAME = st.secrets["google"]["SHEET_NAME"]
-
-    sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
-    data = sheet.get_all_records()
-    df = pd.DataFrame(data)
-
-    for _, row in parsed_df.iterrows():
-        location = row["location"]
-        transactions = row["transactions"]
-
-        if location in df["location"].values:
-            current_stock = df.loc[df["location"] == location, "total_items"].values[0]
-            updated_stock = max(0, current_stock - transactions)  # Ensure stock doesn’t go negative
-            df.loc[df["location"] == location, "total_items"] = updated_stock
-
-    # Update "ready_to_fill" status
-    df["ready_to_fill"] = df["total_items"] <= df["threshold"]
-
-    # Push updated data to Google Sheets
-    sheet.update([df.columns.values.tolist()] + df.values.tolist())
-    print("✅ Google Sheet successfully updated!")
-
-
-if __name__ == "__main__":
-    csv_path = "sales_report.csv"  # Name of the raw daily sales report
-    parsed_df = parse_sales_report(csv_path)
-    print(parsed_df)  # Optional: preview parsed data
-    update_machine_stock(parsed_df)
+    return location_sales  # Optional: for display or logging

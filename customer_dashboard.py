@@ -139,15 +139,14 @@ st.markdown(f"""
 
 st.subheader("📤 Upload and Process Sales Report")
 
-if st.button("Parse Latest Sales Report"):
-    try:
-        # Run the external Python script to parse and update
-        result = subprocess.run(["python3", "parse_sales_report.py"], capture_output=True, text=True)
+from parse_sales_report import parse_and_update
 
-        if result.returncode == 0:
-            st.success("✅ Sales report parsed and inventory updated!")
-        else:
-            st.error("🚨 Error parsing sales report:")
-            st.text(result.stderr)
+# Add a button to trigger parsing
+st.subheader("📥 Update from Daily Sales Report")
+if st.button("Parse and Apply Sales Report"):
+    try:
+        updated = parse_and_update(worksheet)
+        st.success("✅ Sales report parsed and stock updated!")
+        st.write(updated)  # optional, shows what was updated
     except Exception as e:
-        st.error(f"🚨 Failed to run parser: {e}")
+        st.error(f"🚨 Error processing sales report: {e}")
