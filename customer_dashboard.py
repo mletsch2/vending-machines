@@ -180,15 +180,13 @@ def process_sales_report(file, worksheet):
     except Exception as e:
         st.error(f"🚨 Error processing sales report: {e}")
 
-# ✅ **Button to Process Sales Report**
-st.subheader("📂 Process Sales Report")
-uploaded_file = st.file_uploader("Upload daily sales report (CSV)", type=["csv"])
+# ✅ Sales Report Processing
+st.subheader("📤 Upload Daily Sales Report (CSV)")
+uploaded_file = st.file_uploader("Choose a sales report CSV file", type="csv")
+
 if uploaded_file is not None:
-    if st.button("📤 Process Sales Report"):
-        try:
-            process_sales_report(uploaded_file)
-            st.success("✅ Sales report processed and Google Sheet updated!")
-        except Exception as e:
-            st.error(f"🚨 Error processing sales report: {e}")
-else:
-    st.info("📥 Please upload a CSV sales report to begin processing.")
+    try:
+        process_sales_report(uploaded_file, worksheet)  # ✅ Pass worksheet as second argument
+        st.success("✅ Sales report processed and inventory updated!")
+    except Exception as e:
+        st.error(f"🚨 Error processing sales report: {e}")
