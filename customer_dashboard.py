@@ -2,6 +2,7 @@ import streamlit as st
 import gspread
 import pandas as pd
 from google.oauth2.service_account import Credentials
+import subprocess
 
 # Streamlit App Title
 st.markdown("<h1 style='text-align: center;'>Health-E Vend</h1>", unsafe_allow_html=True)
@@ -135,3 +136,18 @@ st.markdown(f"""
         </table>
     </div>
 """, unsafe_allow_html=True)
+
+st.subheader("📤 Upload and Process Sales Report")
+
+if st.button("Parse Latest Sales Report"):
+    try:
+        # Run the external Python script to parse and update
+        result = subprocess.run(["python3", "parse_sales_report.py"], capture_output=True, text=True)
+
+        if result.returncode == 0:
+            st.success("✅ Sales report parsed and inventory updated!")
+        else:
+            st.error("🚨 Error parsing sales report:")
+            st.text(result.stderr)
+    except Exception as e:
+        st.error(f"🚨 Failed to run parser: {e}")
