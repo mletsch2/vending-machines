@@ -3,9 +3,16 @@ import gspread
 import pandas as pd
 from google.oauth2.service_account import Credentials
 
-# Streamlit App Title
-st.markdown("<h1 style='text-align: center;'>Health-E Vend</h1>", unsafe_allow_html=True)
-st.divider()  # Optional: Adds a gray divider like before
+# Load and Display the Centered Logo
+st.markdown(
+    """
+    <div style="text-align: center;">
+        <img src="health_e_vend_logo.jpeg" alt="Health-E Vend Logo" width="250">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+st.divider()  # Optional: Keeps the styling clean
 
 # ✅ Load Google Credentials from Streamlit Secrets
 try:
@@ -37,26 +44,6 @@ try:
 except Exception as e:
     st.error(f"🚨 Error loading data from Google Sheets: {e}")
     st.stop()
-
-# ✅ Sticky Logo
-LOGO_PATH = "health-e vend logo.jpeg"  # Make sure this file is in the app directory
-
-st.markdown(
-    f"""
-    <style>
-        .logo-container {{
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            z-index: 100;
-        }}
-    </style>
-    <div class="logo-container">
-        <img src="data:image/jpeg;base64,{st.file_uploader(LOGO_PATH, type=['jpeg', 'png'])}" width="120">
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
 
 # ✅ Machines That Need Refilling (Always Visible)
 st.markdown('<h3 style="text-align: center;">Machines That Need Refilling</h3>', unsafe_allow_html=True)
