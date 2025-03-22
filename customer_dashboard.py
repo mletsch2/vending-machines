@@ -195,6 +195,9 @@ def process_sales_report(file, worksheet):
         sheet_df["total_items"] = sheet_df["total_items"].clip(lower=0)
         sheet_df["ready_to_fill"] = sheet_df["total_items"] <= sheet_df["threshold"]
 
+        # Sort the DataFrame by location alphabetically
+        sheet_df = sheet_df.sort_values("location").reset_index(drop=True)
+
         worksheet.update([sheet_df.columns.values.tolist()] + sheet_df.values.tolist())
         st.success("✅ Sales report processed and inventory updated!")
 
