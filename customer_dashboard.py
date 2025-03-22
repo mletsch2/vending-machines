@@ -178,10 +178,15 @@ def process_sales_report(file, worksheet):
         sheet_df["location"] = sheet_df["location"].str.strip().str.lower()
 
         for location, items_sold in sales_summary.items():
-            location = location.strip().lower()
+            location = location.strip().lower()  # Normalize the location
             mask = sheet_df["location"] == location
+
             if mask.any():
-                sheet_df.loc[mask, "total_items"] = sheet_df.loc[mask, "total_items"] - items_sold
+                sheet_df.loc[mask, "total_items"] += items_sold
+            else:
+                # Add the new location if it's not found in the Google Sheets
+                new_row = {"location": location, "total_items": items_sold, "threshold": 100, "ready_to_fill": False}
+                sheet_df = sheet_df.append(new_row, ignore_index=True)
 
         # Ensure no negative inventory
         sheet_df["total_items"] = sheet_df["total_items"].clip(lower=0)
