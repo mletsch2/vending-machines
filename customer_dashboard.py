@@ -182,7 +182,7 @@ def process_sales_report(file, worksheet):
             mask = sheet_df["location"] == location
 
             if mask.any():
-                sheet_df.loc[mask, "total_items"] += items_sold
+                sheet_df.loc[mask, "total_items"] -= items_sold
             else:
                 # Add the new location if it's not found in the Google Sheets
                 new_row = {"location": location, "total_items": items_sold, "threshold": 100, "ready_to_fill": False}
