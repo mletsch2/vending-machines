@@ -178,17 +178,20 @@ def process_sales_report(file, worksheet):
         sheet_df["location"] = sheet_df["location"].str.strip().str.lower()
 
         for location, items_sold in sales_summary.items():
-            location = location.strip().lower()  # Normalize the location
+            location = location.strip().lower()
+
+            if location not in sheet_df["location"].values:
+                # Location is missing, add it to the sheet with default stock and threshold
+                st.write(f"✅ Adding new location: {location}")
+                new_location_data = pd.DataFrame(
+                    {"location": [location], "total_items": [100], "threshold": [50], "ready_to_fill": [False]})
+                sheet_df = pd.concat([sheet_df, new_location_data], ignore_index=True)
+
+            # Now update the total items for existing or newly added locations
             mask = sheet_df["location"] == location
+            sheet_df.loc[mask, "total_items"] = sheet_df.loc[mask, "total_items"] - items_sold
 
-            if mask.any():
-                sheet_df.loc[mask, "total_items"] -= items_sold
-            else:
-                # Add the new location if it's not found in the Google Sheets
-                new_row = {"location": location, "total_items": items_sold, "threshold": 100, "ready_to_fill": False}
-                sheet_df = sheet_df.append(new_row, ignore_index=True)
-
-        # Ensure no negative inventory
+            # Ensure no negative inventory
         sheet_df["total_items"] = sheet_df["total_items"].clip(lower=0)
         sheet_df["ready_to_fill"] = sheet_df["total_items"] <= sheet_df["threshold"]
 
