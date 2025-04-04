@@ -64,7 +64,7 @@ with st.expander("Update Stock & Thresholds", icon=":material/autorenew:"):
         st.success(f"✅ {machine_to_refill} updated to {new_stock} items!")
 
     # ✅ Adjust Refill Threshold (Dropdown + Search Box)
-    st.subheader("⚙️ Adjust Refill Threshold")
+    st.subheader("Adjust Refill Threshold", icon=":material/settings:")
 
     search_threshold = st.text_input("Search for a machine to edit threshold:")
     filtered_machines_threshold = df[df["location"].str.contains(search_threshold, case=False, na=False)][
