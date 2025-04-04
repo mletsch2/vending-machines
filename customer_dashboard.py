@@ -49,7 +49,7 @@ else:
     st.success("All machines have sufficient stock!", icon=":material/check:")
 
 # ✅ Collapsible Section: Update Stock & Thresholds
-with st.expander("🔄 Update Stock & Thresholds"):
+with st.expander("Update Stock & Thresholds", icon=":material/autorenew:"):
     search_refill = st.text_input("Search for a machine:")
     filtered_machines = df[df["location"].str.contains(search_refill, case=False, na=False)]["location"].tolist()
 
