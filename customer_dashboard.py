@@ -94,7 +94,7 @@ with st.expander("Add a New Machine", icon=":material/build:"):
         st.success(f"✅ {new_machine} added with {new_total} items and a threshold of {new_thresh}!")
 
 # ✅ Collapsible Section: Vending Machine Stock Levels
-with st.expander("📋 Vending Machine Stock Levels"):
+with st.expander("Vending Machine Stock Levels", icon=":material/leaderboard:"):
     st.dataframe(df)
 
 # ✅ Centered Machine Stats (Without Title)
