@@ -46,7 +46,7 @@ if not low_stock_machines.empty:
     st.write(low_stock_machines)
     st.warning("⚠️ Some machines are below the refill threshold!")
 else:
-    st.success(icon=":material/check:", "All machines have sufficient stock!")
+    st.success("All machines have sufficient stock!", icon=":material/check:")
 
 # ✅ Collapsible Section: Update Stock & Thresholds
 with st.expander("🔄 Update Stock & Thresholds"):
