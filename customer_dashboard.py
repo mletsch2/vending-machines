@@ -3,6 +3,20 @@ import gspread
 import pandas as pd
 from google.oauth2.service_account import Credentials
 
+st.markdown(
+    """
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+    html, body, [class*="css"] {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+        font-weight: 400;
+        color: #333333;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # Regular header title
 st.markdown("<h1 style='text-align: center;'>Health-E Vend</h1>", unsafe_allow_html=True)
 
