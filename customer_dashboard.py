@@ -205,7 +205,7 @@ def process_sales_report(file, worksheet):
         st.error(f"🚨 Error processing sales report: {e}")
 
 # ✅ Sales Report Processing 2
-st.subheader("📤 Upload Sales Report")
+st.subheader("Upload Sales Report", icon=":material/upgrade:")
 uploaded_file = st.file_uploader("Choose a sales report CSV file", type="csv")
 
 if uploaded_file is not None:
