@@ -82,7 +82,7 @@ with st.expander("Update Stock & Thresholds", icon=":material/autorenew:"):
         st.success(f"✅ {machine_to_edit} threshold updated to {new_threshold}!")
 
 # ✅ Collapsible Section: Add a New Machine
-with st.expander("➕ Add a New Machine"):
+with st.expander("Add a New Machine", icon=":material/build:"):
     new_machine = st.text_input("Enter new machine location")
     new_total = st.number_input("Initial stock:", min_value=0, max_value=500, step=1)
     new_thresh = st.number_input("Set refill threshold:", min_value=0, max_value=500, step=1)
