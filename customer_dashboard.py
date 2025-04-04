@@ -128,16 +128,6 @@ total_machines = len(df)
 total_items = df["total_items"].sum()
 needs_refill = (df["ready_to_fill"]).sum()
 
-st.markdown(f"""
-    <div class="machine-stats">
-        <table class="machine-stats-table">
-            <tr><th>Locations</th><td>{total_machines}</td></tr>
-            <tr><th>Items</th><td>{total_items}</td></tr>
-            <tr><th>Needs Refill</th><td>{needs_refill}</td></tr>
-        </table>
-    </div>
-""", unsafe_allow_html=True)
-
 # ✅ Sales Report Processing
 def process_sales_report(file, worksheet):
     try:
